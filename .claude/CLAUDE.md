@@ -316,3 +316,8 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
   `VITE_API_BASE_URL=<render url>` and upload to Loopia (FTP, like Agency's deploy.sh).
   Pending sign-off: CORS is `allow_origin_regex=".*"` (auth is a Bearer header, so low
   risk) — could be restricted to marketplace.cargontainer.com.
+- **Backend live on Render 2026-10-07**: `https://cargontainer-marketplace-api.onrender.com`
+  (Blueprint "Mateja Cargontainer", service `cargontainer-marketplace-api`, Starter,
+  autoDeploy from GitHub `eremijamateja-lab/cargontainer-marketplace` main). Pushed by the
+  user (auto-mode blocked Claude's `git push`). Checked: /health 200, /auth/me 401,
+  locations autocomplete "sabac" → Šabac from Supabase in ~0.8s.
