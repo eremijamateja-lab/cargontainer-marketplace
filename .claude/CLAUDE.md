@@ -297,3 +297,22 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
   `PUT /entities/transport_requests/{id}` status=offers_received → 404 (only the owner may),
   error swallowed, RFQ stays "open". Autocomplete orders by city name, so "Munchen" lists
   "Aachener und Münchener …" before München (postal code works).
+
+### 2026-10-07 — deployment prep (Render + Loopia)
+- Decision: backend on **Render** (Hobby workspace $0 + Starter instance $7/mo, Frankfurt),
+  frontend as static files on the user's existing **Loopia** web hosting
+  (`marketplace.cargontainer.com` already exists there, shows Loopia "Sajt u izradi").
+  Loopia shared hosting runs Python only as CGI, so it can't host FastAPI; Loopia VPS is
+  ~3,239 RSD/mo. Rewriting the backend onto Supabase (RLS/Edge Functions, $0) was discussed
+  and postponed — revisit if TMS needs to read Marketplace data directly.
+- `git init` (branch `main`, first commit `6b67a48`); no remote yet — user has no GitHub
+  repo for this (Agency/Carrier have local git only, Agency deploys via FTP `deploy.sh`).
+  Added `render.yaml` (rootDir app/backend, `uvicorn main:app --port $PORT`, /health,
+  secrets SUPABASE_URL/ANON_KEY/DATABASE_URL as sync:false) and
+  `app/frontend/public/.htaccess` (SPA fallback for BrowserRouter on Apache).
+- Verified: backend boots with only the Render env vars (no .env, ENVIRONMENT=prod):
+  /health 200, /auth/me 401, local-auth 404.
+- Still to do: GitHub repo + push, Render service, then build the frontend with
+  `VITE_API_BASE_URL=<render url>` and upload to Loopia (FTP, like Agency's deploy.sh).
+  Pending sign-off: CORS is `allow_origin_regex=".*"` (auth is a Bearer header, so low
+  risk) — could be restricted to marketplace.cargontainer.com.
