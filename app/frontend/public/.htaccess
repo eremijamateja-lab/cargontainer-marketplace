@@ -1,0 +1,9 @@
+# Loopia (Apache): serve index.html for client-side routes like /messages, /requests
+# so a refresh or a direct link doesn't 404. Real files (assets) are served as-is.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>

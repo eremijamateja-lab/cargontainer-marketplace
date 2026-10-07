@@ -1,0 +1,59 @@
+{
+    "title": "offers",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "integer",
+            "description": "Primary key, auto-increment"
+        },
+        "user_id": {
+            "type": "string",
+            "description": "User ID"
+        },
+        "request_id": {
+            "type": "integer",
+            "description": "Transport request ID"
+        },
+        "price": {
+            "type": "number",
+            "description": "Offer price"
+        },
+        "currency": {
+            "type": "string",
+            "description": "Currency code"
+        },
+        "estimated_days": {
+            "type": "integer",
+            "description": "Estimated transit days"
+        },
+        "transport_mode": {
+            "type": "string",
+            "description": "Transport mode"
+        },
+        "notes": {
+            "type": "string",
+            "description": "Offer notes"
+        },
+        "status": {
+            "type": "string",
+            "description": "Offer status"
+        },
+        "carrier_name": {
+            "type": "string",
+            "description": "Carrier company name"
+        },
+        "service_type": {
+            "type": "string",
+            "description": "Service type: transport or customs_t1"
+        }
+    },
+    "required": [
+        "id",
+        "user_id",
+        "request_id",
+        "price",
+        "currency",
+        "status",
+        "service_type"
+    ]
+}

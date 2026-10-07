@@ -1,0 +1,29 @@
+# Render Blueprint for the Cargontainer Marketplace backend (FastAPI, Supabase mode).
+# Frontend is NOT deployed here - it's static files on Loopia (marketplace.cargontainer.com).
+# Secrets (sync: false) are entered once in the Render dashboard, never committed.
+services:
+  - type: web
+    name: cargontainer-marketplace-api
+    runtime: python
+    plan: starter            # $7/month, 512 MB, always on (free plan sleeps after 15 min)
+    region: frankfurt        # closest Render region to Supabase eu-west-1
+    rootDir: app/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.0
+      - key: AUTH_MODE
+        value: supabase
+      - key: ENVIRONMENT
+        value: prod
+      - key: DEBUG
+        value: "false"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: DATABASE_URL     # Supabase session pooler URI incl. DB password
+        sync: false

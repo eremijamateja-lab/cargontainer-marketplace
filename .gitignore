@@ -1,0 +1,17 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.db
+app/backend/.env
+app/backend/logs/
+.env
+.env.*
+!.env.example
+*.log
+# pasted screenshots/transcripts from earlier sessions, not part of the app
+uploads/
+# stray pip output file
+app/backend/=4.0.0

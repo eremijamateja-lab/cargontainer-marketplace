@@ -1,0 +1,110 @@
+{
+    "title": "transport_requests",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "integer",
+            "description": "Primary key, auto-increment"
+        },
+        "user_id": {
+            "type": "string",
+            "description": "User ID"
+        },
+        "title": {
+            "type": "string",
+            "description": "Request title"
+        },
+        "origin": {
+            "type": "string",
+            "description": "Origin location"
+        },
+        "destination": {
+            "type": "string",
+            "description": "Destination location"
+        },
+        "origin_country": {
+            "type": "string",
+            "description": "Origin country code"
+        },
+        "destination_country": {
+            "type": "string",
+            "description": "Destination country code"
+        },
+        "transport_category": {
+            "type": "string",
+            "description": "Transport category: container, truck_van, rail, oversized, customs_only"
+        },
+        "transport_mode": {
+            "type": "string",
+            "description": "Transport mode: ftl or ltl (for truck_van)"
+        },
+        "vehicle_type": {
+            "type": "string",
+            "description": "Vehicle type: van_3_5t, truck_7_5t, truck_12t, trailer_truck, semi_trailer"
+        },
+        "customs_service_type": {
+            "type": "string",
+            "description": "Customs service type: customs_clearance, t1_transit, customs_documentation, customs_brokerage"
+        },
+        "customs_office": {
+            "type": "string",
+            "description": "Customs office/location name"
+        },
+        "invoice_ref": {
+            "type": "string",
+            "description": "Invoice or reference number"
+        },
+        "additional_services": {
+            "type": "string",
+            "description": "Comma-separated additional services"
+        },
+        "container_type": {
+            "type": "string",
+            "description": "Container or vehicle type"
+        },
+        "container_count": {
+            "type": "integer",
+            "description": "Number of containers/vehicles"
+        },
+        "cargo_description": {
+            "type": "string",
+            "description": "Cargo description"
+        },
+        "weight_kg": {
+            "type": "number",
+            "description": "Weight in kg"
+        },
+        "preferred_date": {
+            "type": "string",
+            "description": "Preferred pickup date"
+        },
+        "deadline_date": {
+            "type": "string",
+            "description": "Delivery deadline"
+        },
+        "special_requirements": {
+            "type": "string",
+            "description": "Special requirements"
+        },
+        "status": {
+            "type": "string",
+            "description": "Request status"
+        },
+        "user_role": {
+            "type": "string",
+            "description": "User role"
+        },
+        "user_company": {
+            "type": "string",
+            "description": "User company name"
+        },
+        "tracking_link": {
+            "type": "string",
+            "description": "Tracking URL"
+        }
+    },
+    "required": [
+        "id",
+        "user_id"
+    ]
+}

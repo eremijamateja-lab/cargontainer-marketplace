@@ -1,0 +1,78 @@
+{
+    "title": "companies",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "integer",
+            "description": "Primary key, auto-increment"
+        },
+        "company_name": {
+            "type": "string",
+            "description": "Company name"
+        },
+        "company_type": {
+            "type": "string",
+            "description": "Company type"
+        },
+        "company_roles": {
+            "type": "string",
+            "description": "JSON array of role strings"
+        },
+        "country": {
+            "type": "string",
+            "description": "Country"
+        },
+        "city": {
+            "type": "string",
+            "description": "City"
+        },
+        "vat_number": {
+            "type": "string",
+            "description": "VAT number"
+        },
+        "email": {
+            "type": "string",
+            "description": "Email"
+        },
+        "phone": {
+            "type": "string",
+            "description": "Phone"
+        },
+        "website": {
+            "type": "string",
+            "description": "Website"
+        },
+        "address": {
+            "type": "string",
+            "description": "Address"
+        },
+        "description": {
+            "type": "string",
+            "description": "Description"
+        },
+        "logo_url": {
+            "type": "string",
+            "description": "Logo URL"
+        },
+        "is_public": {
+            "type": "boolean",
+            "description": "Whether visible in directory"
+        },
+        "subscription_plan": {
+            "type": "string",
+            "description": "Subscription plan"
+        },
+        "active_user_count": {
+            "type": "integer",
+            "description": "Active user count"
+        },
+        "approval_status": {
+            "type": "string",
+            "description": "Company approval status: pending, approved, or rejected. Defaults to approved for existing companies."
+        }
+    },
+    "required": [
+        "id",
+        "company_name"
+    ]
+}

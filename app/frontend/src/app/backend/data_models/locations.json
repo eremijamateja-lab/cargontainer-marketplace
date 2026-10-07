@@ -1,0 +1,41 @@
+{
+    "title": "locations",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "integer",
+            "description": "Primary key, auto-increment"
+        },
+        "country_code": {
+            "type": "string",
+            "description": "ISO 2-letter country code"
+        },
+        "country_name": {
+            "type": "string",
+            "description": "Full country name"
+        },
+        "postal_code": {
+            "type": "string",
+            "description": "Postal/ZIP code"
+        },
+        "city": {
+            "type": "string",
+            "description": "City name"
+        },
+        "location_name": {
+            "type": "string",
+            "description": "Full location display name (city, postal code)"
+        },
+        "location_type": {
+            "type": "string",
+            "description": "Type: city, terminal, port, border_crossing"
+        }
+    },
+    "required": [
+        "id",
+        "country_code",
+        "country_name",
+        "city",
+        "location_name"
+    ]
+}

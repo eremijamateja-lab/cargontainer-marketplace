@@ -1,0 +1,50 @@
+{
+    "title": "company_capabilities",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "integer",
+            "description": "Primary key, auto-increment"
+        },
+        "company_id": {
+            "type": "integer",
+            "description": "FK to companies table"
+        },
+        "vehicle_count": {
+            "type": "integer",
+            "description": "Number of vehicles"
+        },
+        "vehicle_types": {
+            "type": "string",
+            "description": "Comma-separated vehicle types"
+        },
+        "main_routes": {
+            "type": "string",
+            "description": "Main routes text"
+        },
+        "transport_categories": {
+            "type": "string",
+            "description": "Comma-separated transport categories"
+        },
+        "customs_services": {
+            "type": "boolean",
+            "description": "Whether company offers customs services"
+        },
+        "countries_covered": {
+            "type": "string",
+            "description": "Comma-separated country codes"
+        },
+        "customs_offices": {
+            "type": "string",
+            "description": "Customs offices text"
+        },
+        "service_regions": {
+            "type": "string",
+            "description": "Service regions text"
+        }
+    },
+    "required": [
+        "id",
+        "company_id"
+    ]
+}

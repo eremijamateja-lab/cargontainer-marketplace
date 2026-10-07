@@ -1,0 +1,386 @@
+[
+    {
+        "country_code": "DE",
+        "country_name": "Germany",
+        "postal_code": "10115",
+        "city": "Berlin",
+        "location_name": "10115 Berlin",
+        "location_type": "city"
+    },
+    {
+        "country_code": "DE",
+        "country_name": "Germany",
+        "postal_code": "20095",
+        "city": "Hamburg",
+        "location_name": "20095 Hamburg",
+        "location_type": "city"
+    },
+    {
+        "country_code": "DE",
+        "country_name": "Germany",
+        "postal_code": "80331",
+        "city": "München",
+        "location_name": "80331 München",
+        "location_type": "city"
+    },
+    {
+        "country_code": "DE",
+        "country_name": "Germany",
+        "postal_code": "50667",
+        "city": "Köln",
+        "location_name": "50667 Köln",
+        "location_type": "city"
+    },
+    {
+        "country_code": "DE",
+        "country_name": "Germany",
+        "postal_code": "60311",
+        "city": "Frankfurt am Main",
+        "location_name": "60311 Frankfurt am Main",
+        "location_type": "city"
+    },
+    {
+        "country_code": "DE",
+        "country_name": "Germany",
+        "postal_code": "70173",
+        "city": "Stuttgart",
+        "location_name": "70173 Stuttgart",
+        "location_type": "city"
+    },
+    {
+        "country_code": "DE",
+        "country_name": "Germany",
+        "postal_code": "40210",
+        "city": "Düsseldorf",
+        "location_name": "40210 Düsseldorf",
+        "location_type": "city"
+    },
+    {
+        "country_code": "DE",
+        "country_name": "Germany",
+        "postal_code": "28195",
+        "city": "Bremen",
+        "location_name": "28195 Bremen",
+        "location_type": "city"
+    },
+    {
+        "country_code": "DE",
+        "country_name": "Germany",
+        "postal_code": "27568",
+        "city": "Bremerhaven",
+        "location_name": "27568 Bremerhaven",
+        "location_type": "port"
+    },
+    {
+        "country_code": "DE",
+        "country_name": "Germany",
+        "postal_code": "18119",
+        "city": "Rostock",
+        "location_name": "18119 Rostock",
+        "location_type": "port"
+    },
+    {
+        "country_code": "AT",
+        "country_name": "Austria",
+        "postal_code": "1010",
+        "city": "Wien",
+        "location_name": "1010 Wien",
+        "location_type": "city"
+    },
+    {
+        "country_code": "AT",
+        "country_name": "Austria",
+        "postal_code": "8010",
+        "city": "Graz",
+        "location_name": "8010 Graz",
+        "location_type": "city"
+    },
+    {
+        "country_code": "AT",
+        "country_name": "Austria",
+        "postal_code": "4020",
+        "city": "Linz",
+        "location_name": "4020 Linz",
+        "location_type": "city"
+    },
+    {
+        "country_code": "AT",
+        "country_name": "Austria",
+        "postal_code": "5020",
+        "city": "Salzburg",
+        "location_name": "5020 Salzburg",
+        "location_type": "city"
+    },
+    {
+        "country_code": "AT",
+        "country_name": "Austria",
+        "postal_code": "6020",
+        "city": "Innsbruck",
+        "location_name": "6020 Innsbruck",
+        "location_type": "city"
+    },
+    {
+        "country_code": "CH",
+        "country_name": "Switzerland",
+        "postal_code": "8001",
+        "city": "Zürich",
+        "location_name": "8001 Zürich",
+        "location_type": "city"
+    },
+    {
+        "country_code": "CH",
+        "country_name": "Switzerland",
+        "postal_code": "3001",
+        "city": "Bern",
+        "location_name": "3001 Bern",
+        "location_type": "city"
+    },
+    {
+        "country_code": "CH",
+        "country_name": "Switzerland",
+        "postal_code": "4001",
+        "city": "Basel",
+        "location_name": "4001 Basel",
+        "location_type": "city"
+    },
+    {
+        "country_code": "CH",
+        "country_name": "Switzerland",
+        "postal_code": "1201",
+        "city": "Genève",
+        "location_name": "1201 Genève",
+        "location_type": "city"
+    },
+    {
+        "country_code": "NL",
+        "country_name": "Netherlands",
+        "postal_code": "1012",
+        "city": "Amsterdam",
+        "location_name": "1012 Amsterdam",
+        "location_type": "city"
+    },
+    {
+        "country_code": "NL",
+        "country_name": "Netherlands",
+        "postal_code": "3011",
+        "city": "Rotterdam",
+        "location_name": "3011 Rotterdam",
+        "location_type": "port"
+    },
+    {
+        "country_code": "NL",
+        "country_name": "Netherlands",
+        "postal_code": "2511",
+        "city": "Den Haag",
+        "location_name": "2511 Den Haag",
+        "location_type": "city"
+    },
+    {
+        "country_code": "NL",
+        "country_name": "Netherlands",
+        "postal_code": "3511",
+        "city": "Utrecht",
+        "location_name": "3511 Utrecht",
+        "location_type": "city"
+    },
+    {
+        "country_code": "BE",
+        "country_name": "Belgium",
+        "postal_code": "1000",
+        "city": "Bruxelles",
+        "location_name": "1000 Bruxelles",
+        "location_type": "city"
+    },
+    {
+        "country_code": "BE",
+        "country_name": "Belgium",
+        "postal_code": "2000",
+        "city": "Antwerpen",
+        "location_name": "2000 Antwerpen",
+        "location_type": "port"
+    },
+    {
+        "country_code": "BE",
+        "country_name": "Belgium",
+        "postal_code": "9000",
+        "city": "Gent",
+        "location_name": "9000 Gent",
+        "location_type": "city"
+    },
+    {
+        "country_code": "PL",
+        "country_name": "Poland",
+        "postal_code": "00-001",
+        "city": "Warszawa",
+        "location_name": "00-001 Warszawa",
+        "location_type": "city"
+    },
+    {
+        "country_code": "PL",
+        "country_name": "Poland",
+        "postal_code": "30-001",
+        "city": "Kraków",
+        "location_name": "30-001 Kraków",
+        "location_type": "city"
+    },
+    {
+        "country_code": "PL",
+        "country_name": "Poland",
+        "postal_code": "80-001",
+        "city": "Gdańsk",
+        "location_name": "80-001 Gdańsk",
+        "location_type": "port"
+    },
+    {
+        "country_code": "PL",
+        "country_name": "Poland",
+        "postal_code": "50-001",
+        "city": "Wrocław",
+        "location_name": "50-001 Wrocław",
+        "location_type": "city"
+    },
+    {
+        "country_code": "PL",
+        "country_name": "Poland",
+        "postal_code": "60-001",
+        "city": "Poznań",
+        "location_name": "60-001 Poznań",
+        "location_type": "city"
+    },
+    {
+        "country_code": "CZ",
+        "country_name": "Czech Republic",
+        "postal_code": "11000",
+        "city": "Praha",
+        "location_name": "11000 Praha",
+        "location_type": "city"
+    },
+    {
+        "country_code": "CZ",
+        "country_name": "Czech Republic",
+        "postal_code": "60200",
+        "city": "Brno",
+        "location_name": "60200 Brno",
+        "location_type": "city"
+    },
+    {
+        "country_code": "CZ",
+        "country_name": "Czech Republic",
+        "postal_code": "70200",
+        "city": "Ostrava",
+        "location_name": "70200 Ostrava",
+        "location_type": "city"
+    },
+    {
+        "country_code": "SK",
+        "country_name": "Slovakia",
+        "postal_code": "81101",
+        "city": "Bratislava",
+        "location_name": "81101 Bratislava",
+        "location_type": "city"
+    },
+    {
+        "country_code": "SK",
+        "country_name": "Slovakia",
+        "postal_code": "04001",
+        "city": "Košice",
+        "location_name": "04001 Košice",
+        "location_type": "city"
+    },
+    {
+        "country_code": "HU",
+        "country_name": "Hungary",
+        "postal_code": "1011",
+        "city": "Budapest",
+        "location_name": "1011 Budapest",
+        "location_type": "city"
+    },
+    {
+        "country_code": "HU",
+        "country_name": "Hungary",
+        "postal_code": "9021",
+        "city": "Győr",
+        "location_name": "9021 Győr",
+        "location_type": "city"
+    },
+    {
+        "country_code": "HU",
+        "country_name": "Hungary",
+        "postal_code": "6720",
+        "city": "Szeged",
+        "location_name": "6720 Szeged",
+        "location_type": "city"
+    },
+    {
+        "country_code": "SI",
+        "country_name": "Slovenia",
+        "postal_code": "1000",
+        "city": "Ljubljana",
+        "location_name": "1000 Ljubljana",
+        "location_type": "city"
+    },
+    {
+        "country_code": "SI",
+        "country_name": "Slovenia",
+        "postal_code": "2000",
+        "city": "Maribor",
+        "location_name": "2000 Maribor",
+        "location_type": "city"
+    },
+    {
+        "country_code": "SI",
+        "country_name": "Slovenia",
+        "postal_code": "6000",
+        "city": "Koper",
+        "location_name": "6000 Koper",
+        "location_type": "port"
+    },
+    {
+        "country_code": "HR",
+        "country_name": "Croatia",
+        "postal_code": "10000",
+        "city": "Zagreb",
+        "location_name": "10000 Zagreb",
+        "location_type": "city"
+    },
+    {
+        "country_code": "HR",
+        "country_name": "Croatia",
+        "postal_code": "21000",
+        "city": "Split",
+        "location_name": "21000 Split",
+        "location_type": "city"
+    },
+    {
+        "country_code": "HR",
+        "country_name": "Croatia",
+        "postal_code": "51000",
+        "city": "Rijeka",
+        "location_name": "51000 Rijeka",
+        "location_type": "port"
+    },
+    {
+        "country_code": "RS",
+        "country_name": "Serbia",
+        "postal_code": "11000",
+        "city": "Beograd",
+        "location_name": "11000 Beograd",
+        "location_type": "city"
+    },
+    {
+        "country_code": "RS",
+        "country_name": "Serbia",
+        "postal_code": "21000",
+        "city": "Novi Sad",
+        "location_name": "21000 Novi Sad",
+        "location_type": "city"
+    },
+    {
+        "country_code": "RS",
+        "country_name": "Serbia",
+        "postal_code": "18000",
+        "city": "Niš",
+        "location_name": "18000 Niš",
+        "location_type": "city"
+    }
+]
