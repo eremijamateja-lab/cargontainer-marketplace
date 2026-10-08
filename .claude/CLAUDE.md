@@ -337,3 +337,4 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
 - Gotcha: long `!` commands wrap when pasted and break — give the user short commands
   (scripts under ~/Downloads/...). `git push` is blocked for Claude by auto mode; the user
   runs `! git -C "C:\Users\dell 5500\Downloads\atoms-app" push`.
+- 2026-10-08: user logged in on https://marketplace.cargontainer.com (live Supabase + Render) — works.
