@@ -129,9 +129,13 @@ app = FastAPI(
 
 
 # MODULE_MIDDLEWARE_START
+# Production (Render) sets CORS_ALLOW_ORIGINS, e.g. "https://marketplace.cargontainer.com";
+# unset (local dev) keeps the original allow-all behaviour.
+_cors_origins = [o.strip() for o in os.environ.get("CORS_ALLOW_ORIGINS", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r".*",
+    allow_origins=_cors_origins,
+    allow_origin_regex=None if _cors_origins else r".*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
