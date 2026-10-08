@@ -1,8 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { t, formatTransportModeLabel, formatRequestLabel, formatTransportCategoryLabel, formatAdditionalServiceLabel, formatOfferStatusLabel, formatVehicleTypeLabel, formatTransportModeShortLabel } from '@/lib/i18n';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
-import { useMarketplaceRequests, useSubmitOffer, useMyCompany } from '@/hooks/useAppQueries';
+import { useMarketplaceRequests, useSubmitOffer, useMyCompany, useCorridors } from '@/hooks/useAppQueries';
+import AlertsPanel from '@/components/AlertsPanel';
+import { requestMatchesAny, type Corridor } from '@/lib/corridors';
+import { isSoundOn, playAlertSound, showLocalNotification } from '@/lib/push';
 import { hasCompanyRole, isOnlyForwarder, parseCompanyRoles } from '@/lib/formatCompanyRoles';
 import Layout from '@/components/Layout';
 import Flag from '@/components/Flag';
@@ -26,7 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { MapPin, ArrowRight, Package, Send, Building2, Calendar, Loader2, X, ShieldCheck, SlidersHorizontal, ChevronDown, MessageCircle } from 'lucide-react';
+import { MapPin, ArrowRight, Package, Send, Building2, Calendar, Loader2, X, ShieldCheck, SlidersHorizontal, ChevronDown, MessageCircle, Bell } from 'lucide-react';
 import {
   TRANSPORT_TYPES,
   TRANSPORT_TYPE_MAP,
@@ -85,8 +89,8 @@ export default function Marketplace() {
   // Can submit customs/T1 offers: customs agent, terminal, OR freight forwarder
   const canSubmitCustoms = isCustomsAgent || isTerminal || isForwarder;
 
-  // React Query hooks — enabled for all roles now
-  const { data: requests = [], isLoading: dataLoading, isFetching } = useMarketplaceRequests(!!profile);
+  // React Query hooks — enabled for all roles now. Live: refetch every 10s while the board is open.
+  const { data: requests = [], isLoading: dataLoading, isFetching } = useMarketplaceRequests(!!profile, true);
   const submitOfferMutation = useSubmitOffer();
 
   // For forwarders: filter out their OWN requests (they manage those on /requests page)
@@ -96,6 +100,57 @@ export default function Marketplace() {
     }
     return requests;
   }, [requests, isForwarder, currentUserId, companyRoles]);
+
+  // ─── New-request alerts: sound + desktop notification for requests on "Moje relacije" ───
+  const canGetAlerts = canSubmitTransport || canSubmitCustoms;
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  const { data: corridors = [] } = useCorridors(!!profile && canGetAlerts);
+  const seenIdsRef = useRef<Set<string> | null>(null);
+  const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (dataLoading) return;
+    const ids = (visibleRequests as any[]).map((r) => String(r.id));
+    if (!seenIdsRef.current) {
+      seenIdsRef.current = new Set(ids); // first load: what's already there is not "new"
+      return;
+    }
+    const seen = seenIdsRef.current;
+    const arrived = (visibleRequests as any[]).filter((r) => !seen.has(String(r.id)));
+    ids.forEach((id) => seen.add(id));
+    if (!arrived.length) return;
+    setFreshIds((prev) => new Set([...prev, ...arrived.map((r) => String(r.id))]));
+    if (!canGetAlerts) return;
+    const matching = arrived.filter((r) => requestMatchesAny(corridors as Corridor[], r));
+    if (!matching.length) return;
+    if (isSoundOn()) playAlertSound();
+    if (document.hidden) {
+      matching.slice(0, 3).forEach((r) => {
+        const route = `${r.origin_country || '?'} → ${r.destination_country || '?'}`;
+        void showLocalNotification(
+          `${t('alerts.newRequestTitle')} ${route}`,
+          `${r.origin || ''} → ${r.destination || ''}${r.weight_kg ? ` · ${r.weight_kg} kg` : ''}`,
+          `/marketplace?request=${r.id}`,
+          `request-${r.id}`,
+        );
+      });
+    }
+  }, [visibleRequests, dataLoading, canGetAlerts, corridors]);
+
+  const isNew = (req: any) => {
+    if (freshIds.has(String(req.id))) return true;
+    const created = req.created_at ? new Date(req.created_at).getTime() : 0;
+    return created > 0 && Date.now() - created < 15 * 60 * 1000;
+  };
+
+  // Opened from a notification: /marketplace?request=ID → scroll to it and highlight
+  const [searchParams] = useSearchParams();
+  const focusId = searchParams.get('request');
+  useEffect(() => {
+    if (!focusId || dataLoading) return;
+    const el = document.getElementById(`request-${focusId}`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [focusId, dataLoading]);
 
   // Filtered requests
   const filteredRequests = useMemo(() => {
@@ -221,6 +276,17 @@ export default function Marketplace() {
               {isTerminal ? t('nav.allRequests') : isForwarder ? t('nav.marketplace') : t('marketplace.title')}
             </h1>
             {isFetching && <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
+            {canGetAlerts && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setAlertsOpen(true)}
+                className="ml-auto border-blue-200 text-blue-700 hover:bg-blue-50"
+              >
+                <Bell className="w-4 h-4 mr-1.5" />
+                {t('alerts.button')}
+              </Button>
+            )}
           </div>
           <p className="text-gray-500 mt-1">{getSubtitle()}</p>
         </div>
@@ -368,7 +434,13 @@ export default function Marketplace() {
               const modeInfo = req.transport_mode ? TRANSPORT_MODE_MAP[req.transport_mode] : null;
 
               return (
-                <Card key={req.id} className="bg-white border-gray-200 hover:border-blue-200 transition-colors">
+                <Card
+                  key={req.id}
+                  id={`request-${req.id}`}
+                  className={`bg-white border-gray-200 hover:border-blue-200 transition-colors ${
+                    focusId === String(req.id) ? 'ring-2 ring-blue-500' : ''
+                  }`}
+                >
                   <CardContent className="p-5">
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                       <div className="flex-1">
@@ -385,6 +457,11 @@ export default function Marketplace() {
                             )}
                             <span>{req.destination || '—'}</span>
                           </div>
+                          {isNew(req) && (
+                            <Badge className="text-[10px] font-bold bg-green-600 hover:bg-green-600 text-white px-1.5 py-0">
+                              {t('alerts.new')}
+                            </Badge>
+                          )}
                           {catInfo && (
                             <Badge variant="outline" className={`text-xs font-medium ${catInfo.color}`}>
                               {catInfo.emoji} {formatTransportCategoryLabel(req.transport_category)}
@@ -631,6 +708,8 @@ export default function Marketplace() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {canGetAlerts && <AlertsPanel open={alertsOpen} onOpenChange={setAlertsOpen} />}
 
         <ChatPanel
           open={!!chatRequest}

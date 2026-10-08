@@ -28,7 +28,9 @@ export function useMyRequests(enabled: boolean) {
 }
 
 // ─── Marketplace requests (all published/open) ───
-export function useMarketplaceRequests(enabled: boolean) {
+// live = the board is open: refetch every 10s, also in a background tab, so new requests show
+// up (with sound/notification, see Marketplace.tsx) without a manual refresh.
+export function useMarketplaceRequests(enabled: boolean, live = false) {
   return useQuery({
     queryKey: queryKeys.marketplaceRequests,
     queryFn: async () => {
@@ -47,7 +49,9 @@ export function useMarketplaceRequests(enabled: boolean) {
       }
     },
     enabled,
-    staleTime: 30_000,
+    staleTime: live ? 5_000 : 30_000,
+    refetchInterval: enabled && live ? 10_000 : false,
+    refetchIntervalInBackground: live,
   });
 }
 
@@ -801,5 +805,36 @@ export function useRequestThreads(requestId: number | null, enabled: boolean) {
     },
     enabled: enabled && !!requestId,
     refetchInterval: enabled ? 6000 : false,
+  });
+}
+
+// ─── "Moje relacije" (corridors for new-request alerts) ───
+export function useCorridors(enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.corridors,
+    queryFn: async () => {
+      const res: any = await client.apiCall.invoke({ url: '/api/v1/notifications/corridors', method: 'GET' });
+      const data = res?.data ?? res;
+      return Array.isArray(data) ? data : [];
+    },
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export function useSaveCorridors() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (items: { origin_country: string | null; destination_country: string | null; both_directions: boolean }[]) => {
+      const res: any = await client.apiCall.invoke({ url: '/api/v1/notifications/corridors', method: 'PUT', data: items });
+      return res?.data ?? res;
+    },
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.corridors, Array.isArray(data) ? data : []);
+      toast.success(t('alerts.saved'));
+    },
+    onError: () => {
+      toast.error(t('alerts.saveFailed'));
+    },
   });
 }

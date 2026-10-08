@@ -40,4 +40,7 @@ export const queryKeys = {
   companyMembers: ['company-members'] as const,
   companyDirectory: (params: string) => ['company-directory', params] as const,
   companyPublic: (id: number) => ['company-public', id] as const,
+
+  // New-request alerts ("Moje relacije")
+  corridors: ['corridors'] as const,
 } as const;

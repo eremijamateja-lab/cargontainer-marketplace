@@ -4,11 +4,12 @@ from typing import List, Optional
 
 from datetime import datetime, date
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
+from services.notifications import notify_new_request
 from services.transport_requests import Transport_requestsService
 from dependencies.auth import get_current_user, require_approved_company
 from schemas.auth import UserResponse
@@ -242,6 +243,7 @@ async def get_transport_requests(
 @router.post("", response_model=Transport_requestsResponse, status_code=201)
 async def create_transport_requests(
     data: Transport_requestsData,
+    background_tasks: BackgroundTasks,
     current_user: UserResponse = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -255,6 +257,8 @@ async def create_transport_requests(
             raise HTTPException(status_code=400, detail="Failed to create transport_requests")
         
         logger.info(f"Transport_requests created successfully with id: {result.id}")
+        # Push "Novi upit" to carriers whose corridors match (after the response is sent)
+        background_tasks.add_task(notify_new_request, result.id)
         return result
     except ValueError as e:
         logger.error(f"Validation error creating transport_requests: {str(e)}")
