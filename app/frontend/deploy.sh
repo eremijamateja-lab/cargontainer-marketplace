@@ -6,6 +6,7 @@
 # Supabase URL/anon key come from .env.supabase; the API points at the Render backend.
 set -euo pipefail
 cd "$(dirname "$0")"
+export PATH="/c/Program Files/nodejs:$PATH"
 set -a; . ./.env.deploy; set +a
 : "${LOOPIA_FTP_SERVER:?}" "${LOOPIA_FTP_USERNAME:?}" "${LOOPIA_FTP_PASSWORD:?}" "${LOOPIA_FTP_DOCROOT:?}"
 

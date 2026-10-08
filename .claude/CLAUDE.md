@@ -321,3 +321,19 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
   autoDeploy from GitHub `eremijamateja-lab/cargontainer-marketplace` main). Pushed by the
   user (auto-mode blocked Claude's `git push`). Checked: /health 200, /auth/me 401,
   locations autocomplete "sabac" → Šabac from Supabase in ~0.8s.
+- **Frontend live on Loopia 2026-10-08**: `https://marketplace.cargontainer.com` (user ran
+  `app/frontend/deploy.sh`; 156 files incl. ~300 flag SVGs, takes ~3 min). `.env.deploy`
+  is made once by `prepare-deploy.sh` (copies Agency's FTP file, docroot → marketplace).
+  Verified: live index + bundle byte-identical to local dist, deep link /messages → index
+  (.htaccess works), bundle points at Supabase + Render. Code changes (user signed off):
+  `lib/api.ts` web-sdk baseURL from `VITE_API_ORIGIN` (unset locally = same-origin as
+  before); `main.py` CORS from `CORS_ALLOW_ORIGINS` (Render: marketplace only; checked
+  marketplace → 200, other origin → 400; unset locally = allow-all as before).
+- Loopia outage 2026-10-07: Loopia blocked the shared IP (2a02:250:0:8::51 /
+  93.188.2.53) because a neighbour site (superoglasi.rs) was attacked → tms-agency,
+  tms-carrier, marketplace all down until ~10-08. User chose to stay on Loopia;
+  Cloudflare Pages (free, unlimited bandwidth) is the fallback if it recurs. Render Hobby
+  static sites only include 5 GB/month bandwidth + 2 custom domains, so not used.
+- Gotcha: long `!` commands wrap when pasted and break — give the user short commands
+  (scripts under ~/Downloads/...). `git push` is blocked for Claude by auto mode; the user
+  runs `! git -C "C:\Users\dell 5500\Downloads\atoms-app" push`.
