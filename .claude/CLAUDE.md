@@ -338,3 +338,28 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
   (scripts under ~/Downloads/...). `git push` is blocked for Claude by auto mode; the user
   runs `! git -C "C:\Users\dell 5500\Downloads\atoms-app" push`.
 - 2026-10-08: user logged in on https://marketplace.cargontainer.com (live Supabase + Render) — works.
+
+### 2026-10-09 — Phase 1 of the "ludilo berza" plan: new-request alerts (`24d9a84`)
+- Agreed with the user (domain expert): loads get taken within minutes, so NO email
+  digests. Instead (1) live board + sound/desktop notification, (2) Web Push to phones.
+  All carriers see every request (no "only my carriers" option). Everything free for now;
+  manual approval (Platform admin adds the marketplace product) stays. Later phases:
+  2 = accepted offer → "Novo sa Marketplace-a" inbox in TMS Agency (needs Agency sign-off),
+  3 = verified badge (manual, by Platform admin) + ratings (avg shown after 3).
+- Backend: `models/notifications.py` (carrier_corridors per company, push_subscriptions per
+  device, push_keys = VAPID pair generated on first use, so no secret env var),
+  `services/notifications.py` (corridor_matches, pywebpush send in threads, 404/410 →
+  subscription deleted), `routers/notifications.py` (/api/v1/notifications/corridors GET/PUT,
+  push/public-key, subscribe, unsubscribe, status, test). `POST /entities/transport_requests`
+  schedules `notify_new_request` as a BackgroundTask (own DB session, never breaks the request).
+- Frontend: `components/AlertsPanel.tsx` ("Obaveštenja" button on /marketplace for companies
+  that can make offers), `lib/push.ts`, `lib/corridors.ts` (same rule as backend),
+  `public/sw.js` (push only, NO caching), `manifest.webmanifest` + `icon-512.png` (iOS needs
+  Add to Home Screen for push). Board refetches every 10s also in background tabs; NOVO
+  badge = arrived live or created < 15 min ago; `/marketplace?request=ID` scrolls + rings it.
+- Tested locally (copy of local.db on :8007, vite on :3021, headless Chrome over CDP):
+  corridor dedupe/normalise, RS→DE matched 1 company, IT→HU and FR→ES not; unreachable push
+  endpoint handled; payload encryption verified by decrypting with the client key; board
+  showed a new request after ~3s with NOVO; deep link highlight; zero console errors.
+- Migration `20261009090000_marketplace_notifications.sql` applied to live Supabase by Claude
+  (user OK'd) via asyncpg: 3 tables, RLS on, anon/authenticated no select; 12 tables total.
