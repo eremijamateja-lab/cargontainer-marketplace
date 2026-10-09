@@ -19,8 +19,8 @@ cd dist
 # assets first, index.html last, so visitors never get an index pointing at missing files
 find . -type f ! -name index.html | sed 's#^\./##' | sort | while read -r f; do
   echo "upload $f"
-  curl -sS --ssl-reqd --ftp-create-dirs --max-time 120 -T "$f" "$BASE/$f" --user "$AUTH"
+  curl -sS --ssl-reqd --ftp-create-dirs --retry 4 --retry-all-errors --retry-delay 3 --max-time 120 -T "$f" "$BASE/$f" --user "$AUTH"
 done
 echo "upload index.html"
-curl -sS --ssl-reqd --max-time 60 -T index.html "$BASE/index.html" --user "$AUTH"
+curl -sS --ssl-reqd --retry 4 --retry-all-errors --retry-delay 3 --max-time 60 -T index.html "$BASE/index.html" --user "$AUTH"
 echo "done: https://marketplace.cargontainer.com/"
