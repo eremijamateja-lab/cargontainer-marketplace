@@ -1,6 +1,18 @@
 # Correct type for the PWA manifest (Loopia sends none for .webmanifest)
 AddType application/manifest+json .webmanifest
 
+# Caching: Loopia sends no Cache-Control, so phones kept old pages (even Loopia's
+# "Sajt u izradi") for days. Hashed build assets can be cached forever; the entry
+# files must always be re-checked so a deploy shows up immediately.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|svg|png|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "^(index\.html|sw\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
 # Loopia (Apache): serve index.html for client-side routes like /messages, /requests
 # so a refresh or a direct link doesn't 404. Real files (assets) are served as-is.
 <IfModule mod_rewrite.c>
