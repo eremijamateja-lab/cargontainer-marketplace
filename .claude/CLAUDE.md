@@ -377,3 +377,23 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
   Trieste → Beograd, 1500, Cargontainer Test Prevoznik, PIB 999000111; 0 rows kept.
 - Testing gotcha (phase 1): a company never gets pushes for its OWN requests, and a corridor
   only counts for requests created after it; the user's first "no push" test was both.
+
+### 2026-10-10 — company-scoped identity (`f25de73`) — "Nexalog took over Ecom's requests"
+- Bug: mateja.eremija@nexalogistics-cn.com is an active member of Nexalog doo (Admin) and Ecom
+  Transport (Prodaja); both have the marketplace product. The Marketplace had ONE company per
+  person (`load_memberships()[0]`) and owned rows by auth uid, so when Nexalog got Marketplace
+  the user silently became Nexalog and kept owning Ecom's requests (could accept offers for
+  Ecom as Nexalog; a TMS hand-off would have gone to Nexalog's Agency).
+- Fix: in Supabase mode `current_user.id` = actor **"<auth uid>:<shared company uuid>"**
+  (`supabase_bridge.make_actor/split_actor/pick_membership`), so every existing user_id check
+  is per company. UserResponse got `auth_id` + `company_shared_id`; memberships are looked up by
+  `auth_id` (profile onboarding, admin approval-status). Active company = `X-Company-Id` header
+  (frontend `lib/api.ts`, localStorage `mp_active_company`, switcher in the user menu via
+  `GET /api/v1/profile/companies`, switching reloads to /dashboard) if the user is an active
+  member, else the stable default (marketplace product first, then join date). Sync cache key
+  is uid|company. Platform admins without a company keep the bare uid. Local mode unchanged
+  (regression: create → carrier sees → offer → received → accept 200, carrier accept 400).
+- Live backfill (user approved; dry run first, then applied right after Render was live): all
+  owner columns rewritten uid → actor (profile company; the multi-company user → Ecom Transport,
+  his whole history was Ecom). 0 rows left without a company.
+- Push: a device subscription follows the company it was last turned on for.
