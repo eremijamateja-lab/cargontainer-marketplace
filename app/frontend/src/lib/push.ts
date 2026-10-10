@@ -30,6 +30,24 @@ export async function getPushSubscription(): Promise<PushSubscription | null> {
   return reg ? reg.pushManager.getSubscription() : null;
 }
 
+/** The browser keeps one push subscription per device, whoever is logged in. Re-register it for
+ *  the account + company that is logged in now, so pushes follow the current user (otherwise the
+ *  switch shows "on" while the server still sends this device's pushes to the previous account). */
+let claimedThisLoad = false;
+export async function claimPushForCurrentUser(): Promise<boolean> {
+  if (claimedThisLoad || !isPushSupported() || Notification.permission !== 'granted') return false;
+  const sub = await getPushSubscription();
+  if (!sub) return false;
+  const json = sub.toJSON();
+  await client.apiCall.invoke({
+    url: '/api/v1/notifications/push/subscribe',
+    method: 'POST',
+    data: { endpoint: json.endpoint, keys: json.keys, lang: getLanguage() },
+  });
+  claimedThisLoad = true;
+  return true;
+}
+
 export async function enablePush(): Promise<'ok' | 'denied' | 'unsupported'> {
   if (!isPushSupported()) return 'unsupported';
   const permission = await Notification.requestPermission();

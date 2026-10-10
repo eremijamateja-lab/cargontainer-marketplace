@@ -4,7 +4,7 @@ import { COUNTRIES } from '@/lib/constants';
 import type { Corridor } from '@/lib/corridors';
 import { useCorridors, useSaveCorridors } from '@/hooks/useAppQueries';
 import {
-  disablePush, enablePush, getPushSubscription, isIosNotInstalled, isPushSupported,
+  claimPushForCurrentUser, disablePush, enablePush, getPushSubscription, isIosNotInstalled, isPushSupported,
   isSoundOn, playAlertSound, sendTestPush, setSoundOn,
 } from '@/lib/push';
 import Flag from '@/components/Flag';
@@ -50,6 +50,7 @@ export default function AlertsPanel({ open, onOpenChange }: { open: boolean; onO
   useEffect(() => {
     if (!open) return;
     getPushSubscription().then((s) => setPushOn(!!s)).catch(() => setPushOn(false));
+    void claimPushForCurrentUser().catch(() => undefined);
   }, [open]);
 
   const update = (i: number, patch: Partial<Corridor>) =>

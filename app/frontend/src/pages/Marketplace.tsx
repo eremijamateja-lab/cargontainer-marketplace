@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMarketplaceRequests, useSubmitOffer, useMyCompany, useCorridors } from '@/hooks/useAppQueries';
 import AlertsPanel from '@/components/AlertsPanel';
 import { requestMatchesAny, type Corridor } from '@/lib/corridors';
-import { isSoundOn, playAlertSound, showLocalNotification } from '@/lib/push';
+import { claimPushForCurrentUser, isSoundOn, playAlertSound, showLocalNotification } from '@/lib/push';
 import { hasCompanyRole, isOnlyForwarder, parseCompanyRoles } from '@/lib/formatCompanyRoles';
 import Layout from '@/components/Layout';
 import Flag from '@/components/Flag';
@@ -105,6 +105,10 @@ export default function Marketplace() {
   const canGetAlerts = canSubmitTransport || canSubmitCustoms;
   const [alertsOpen, setAlertsOpen] = useState(false);
   const { data: corridors = [] } = useCorridors(!!profile && canGetAlerts);
+  // This device's push subscription follows whoever is logged in here now (see lib/push.ts)
+  useEffect(() => {
+    if (profile && canGetAlerts) void claimPushForCurrentUser().catch(() => undefined);
+  }, [profile, canGetAlerts]);
   const seenIdsRef = useRef<Set<string> | null>(null);
   const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
 
