@@ -363,3 +363,17 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
   showed a new request after ~3s with NOVO; deep link highlight; zero console errors.
 - Migration `20261009090000_marketplace_notifications.sql` applied to live Supabase by Claude
   (user OK'd) via asyncpg: 3 tables, RLS on, anon/authenticated no select; 12 tables total.
+
+### 2026-10-10 — Phase 2: accepted offer → TMS Agency inbox (`4efd653`; Agency `37da64b`)
+- User signed off Agency changes ("kreni sa fazom 2"). `services/tms_handoff.py::create_handoff`
+  runs after `/marketplace/accept-offer` (Supabase mode, transport offers only): inserts one row
+  into **public.marketplace_handoffs** (raw SQL, explicit schema) for the forwarder's
+  `shared_company_id`, payload = request + offer + carrier (name, PIB, contacts) + CRG number;
+  `on conflict (marketplace_offer_id) do nothing`; never raises.
+- Table/RLS/RPCs are in the Agency repo (`20261010090000_marketplace_handoffs.sql`), applied to
+  live by Claude with the user's OK: RLS select own company/platform admin, no write policies,
+  RPCs use_/dismiss_marketplace_handoff (security definer, authenticated only), realtime on.
+- Dry-run on live (transaction rolled back): newest shipment CRG-DDF49234 → row with
+  Trieste → Beograd, 1500, Cargontainer Test Prevoznik, PIB 999000111; 0 rows kept.
+- Testing gotcha (phase 1): a company never gets pushes for its OWN requests, and a corridor
+  only counts for requests created after it; the user's first "no push" test was both.
