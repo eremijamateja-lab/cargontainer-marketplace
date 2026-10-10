@@ -397,3 +397,9 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
   owner columns rewritten uid → actor (profile company; the multi-company user → Ecom Transport,
   his whole history was Ecom). 0 rows left without a company.
 - Push: a device subscription follows the company it was last turned on for.
+- 2026-10-10: push also for new offer (→ request owner's company, /requests), offer accepted
+  (→ carrier's company, /shipments) and new chat message in either thread type (→ the other
+  side's company, /messages); company-wide, never to the sender. Local test: offer → forwarder
+  device, carrier question → forwarder, forwarder offer-message → carrier, accept → carrier.
+  Phone test before: push to Test Prevoznik (IT→RS by Nexalog) arrived after the device was
+  re-registered — the old switch showed "on" for a device registered to Ecom (fixed: claim on load).

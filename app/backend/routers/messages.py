@@ -3,11 +3,12 @@ from typing import List, Optional
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import BackgroundTasks, APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
+from services.notifications import notify_new_message
 from services.messages import MessagesService
 from dependencies.auth import get_current_user, require_approved_company
 from schemas.auth import UserResponse
@@ -59,6 +60,7 @@ async def list_messages(
 async def send_message(
     offer_id: int,
     data: SendMessageRequest,
+    background_tasks: BackgroundTasks,
     current_user: UserResponse = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -66,7 +68,9 @@ async def send_message(
     service = MessagesService(db)
     try:
         sender_name = current_user.name or current_user.email
-        return await service.send_message(offer_id, str(current_user.id), sender_name, data.body)
+        message = await service.send_message(offer_id, str(current_user.id), sender_name, data.body)
+        background_tasks.add_task(notify_new_message, message.id)
+        return message
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:

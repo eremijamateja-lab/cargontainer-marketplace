@@ -4,11 +4,12 @@ from typing import List, Optional
 
 from datetime import datetime, date
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import BackgroundTasks, APIRouter, Body, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
+from services.notifications import notify_new_offer
 from services.offers import OffersService
 from dependencies.auth import get_current_user, require_approved_company
 from schemas.auth import UserResponse
@@ -200,6 +201,7 @@ async def get_offers(
 @router.post("", response_model=OffersResponse, status_code=201)
 async def create_offers(
     data: OffersData,
+    background_tasks: BackgroundTasks,
     current_user: UserResponse = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -213,6 +215,7 @@ async def create_offers(
             raise HTTPException(status_code=400, detail="Failed to create offers")
         
         logger.info(f"Offers created successfully with id: {result.id}")
+        background_tasks.add_task(notify_new_offer, result.id)
         return result
     except ValueError as e:
         logger.error(f"Validation error creating offers: {str(e)}")

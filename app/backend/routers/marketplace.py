@@ -1,11 +1,12 @@
 import logging
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import BackgroundTasks, APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
+from services.notifications import notify_offer_accepted
 from services.tms_handoff import create_handoff
 from services.marketplace import MarketplaceService
 from dependencies.auth import get_current_user, require_approved_company
@@ -187,6 +188,7 @@ async def get_offers_for_request(
 @router.post("/accept-offer", response_model=ShipmentResponse)
 async def accept_offer(
     data: AcceptOfferRequest,
+    background_tasks: BackgroundTasks,
     current_user: UserResponse = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -202,6 +204,7 @@ async def accept_offer(
             raise HTTPException(status_code=400, detail="Failed to accept offer")
         # Supabase mode: put it in the forwarder's TMS Agency inbox ("📥 Novo sa Marketplace-a")
         await create_handoff(db, shipment)
+        background_tasks.add_task(notify_offer_accepted, data.offer_id)
         return shipment
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

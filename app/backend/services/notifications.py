@@ -179,3 +179,132 @@ async def notify_new_request(request_id: int) -> None:
             logger.info("Request %s: push sent to %s device(s) in %s company(ies)", request_id, sent, len(companies))
     except Exception:
         logger.exception("notify_new_request(%s) failed", request_id)
+
+
+# ─── Other events: new offer (→ forwarder), offer accepted (→ carrier), new chat message ───
+# Each goes to every device of the receiving COMPANY (dispatch teams share the work), never to
+# the actor who caused it.
+
+async def _company_of_actor(db: AsyncSession, actor: Optional[str]) -> Optional[int]:
+    return await get_user_company_id(db, actor) if actor else None
+
+
+async def _push_company(db: AsyncSession, company_id: Optional[int], exclude_actor: Optional[str], payload_for) -> int:
+    if not company_id:
+        return 0
+    query = select(Push_subscriptions).where(Push_subscriptions.company_id == company_id)
+    if exclude_actor:
+        query = query.where(Push_subscriptions.user_id != str(exclude_actor))
+    subs = (await db.execute(query)).scalars().all()
+    return await send_to_subscriptions(db, subs, payload_for)
+
+
+def _route(req) -> str:
+    return f"{_norm(req.origin_country) or '?'} → {_norm(req.destination_country) or '?'}"
+
+
+def _places(req) -> str:
+    return f"{req.origin or ''} → {req.destination or ''}".strip()
+
+
+def _price(offer) -> str:
+    return f"{offer.price:g} {offer.currency or ''}".strip() if offer and offer.price is not None else ""
+
+
+async def _with_session(fn, *args) -> None:
+    try:
+        await db_manager.ensure_initialized()
+        async with db_manager.async_session_maker() as db:
+            await fn(db, *args)
+    except Exception:
+        logger.exception("%s%s failed", getattr(fn, "__name__", "notify"), args)
+
+
+async def _new_offer(db: AsyncSession, offer_id: int) -> None:
+    from models.offers import Offers
+
+    offer = await db.get(Offers, offer_id)
+    req = await db.get(Transport_requests, offer.request_id) if offer else None
+    if not offer or not req:
+        return
+    company = await _company_of_actor(db, req.user_id)
+    if company == await _company_of_actor(db, offer.user_id):
+        return
+
+    def payload(lang: str) -> dict:
+        en = lang == "en"
+        return {
+            "title": ("New offer " if en else "Nova ponuda ") + _route(req),
+            "body": " · ".join(p for p in [offer.carrier_name or "", _price(offer), _places(req)] if p),
+            "url": "/requests",
+            "tag": f"offer-{offer.id}",
+        }
+
+    await _push_company(db, company, offer.user_id, payload)
+
+
+async def _offer_accepted(db: AsyncSession, offer_id: int) -> None:
+    from models.offers import Offers
+
+    offer = await db.get(Offers, offer_id)
+    req = await db.get(Transport_requests, offer.request_id) if offer else None
+    if not offer or not req or (offer.status or "").lower() != "accepted":
+        return
+
+    def payload(lang: str) -> dict:
+        en = lang == "en"
+        return {
+            "title": ("✔ Offer accepted " if en else "✔ Ponuda prihvaćena ") + _route(req),
+            "body": " · ".join(p for p in [req.user_company or "", _price(offer), _places(req)] if p),
+            "url": "/shipments",
+            "tag": f"accepted-{offer.id}",
+        }
+
+    await _push_company(db, await _company_of_actor(db, offer.user_id), req.user_id, payload)
+
+
+async def _new_message(db: AsyncSession, message_id: int) -> None:
+    from models.messages import Messages
+    from models.offers import Offers
+
+    msg = await db.get(Messages, message_id)
+    if not msg:
+        return
+    if msg.offer_id:
+        offer = await db.get(Offers, msg.offer_id)
+        req = await db.get(Transport_requests, offer.request_id) if offer else None
+        if not offer or not req:
+            return
+        recipient = req.user_id if msg.sender_user_id == offer.user_id else offer.user_id
+        thread = f"msg-offer-{offer.id}"
+    else:
+        req = await db.get(Transport_requests, msg.request_id) if msg.request_id else None
+        if not req:
+            return
+        recipient = req.user_id if msg.sender_user_id == msg.carrier_user_id else msg.carrier_user_id
+        thread = f"msg-req-{req.id}-{msg.carrier_user_id}"
+    snippet = (msg.body or "").strip().replace("\n", " ")
+    snippet = snippet[:90] + ("…" if len(snippet) > 90 else "")
+
+    def payload(lang: str) -> dict:
+        en = lang == "en"
+        return {
+            "title": ("💬 New message · " if en else "💬 Nova poruka · ") + (msg.sender_name or "") + f" ({_route(req)})",
+            "body": snippet,
+            "url": "/messages",
+            "tag": thread,
+        }
+
+    await _push_company(db, await _company_of_actor(db, recipient), msg.sender_user_id, payload)
+
+
+async def notify_new_offer(offer_id: int) -> None:
+    await _with_session(_new_offer, offer_id)
+
+
+async def notify_offer_accepted(offer_id: int) -> None:
+    await _with_session(_offer_accepted, offer_id)
+
+
+async def notify_new_message(message_id: int) -> None:
+    await _with_session(_new_message, message_id)
