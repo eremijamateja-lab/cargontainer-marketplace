@@ -4,7 +4,7 @@ import { COUNTRIES } from '@/lib/constants';
 import type { Corridor } from '@/lib/corridors';
 import { useCorridors, useSaveCorridors } from '@/hooks/useAppQueries';
 import {
-  claimPushForCurrentUser, disablePush, enablePush, getPushSubscription, isIosNotInstalled, isPushSupported,
+  claimPushForCurrentUser, disablePush, enablePush, isIosNotInstalled, isPushSupported,
   isSoundOn, playAlertSound, sendTestPush, setSoundOn,
 } from '@/lib/push';
 import Flag from '@/components/Flag';
@@ -49,8 +49,11 @@ export default function AlertsPanel({ open, onOpenChange }: { open: boolean; onO
 
   useEffect(() => {
     if (!open) return;
-    getPushSubscription().then((s) => setPushOn(!!s)).catch(() => setPushOn(false));
-    void claimPushForCurrentUser().catch(() => undefined);
+    // "On" only when this browser has a subscription AND it is registered for the account and
+    // company logged in now (re-registering moves it here from whoever used this device before).
+    claimPushForCurrentUser(true)
+      .then((ok) => setPushOn(ok))
+      .catch(() => setPushOn(false));
   }, [open]);
 
   const update = (i: number, patch: Partial<Corridor>) =>
@@ -77,8 +80,10 @@ export default function AlertsPanel({ open, onOpenChange }: { open: boolean; onO
 
   const test = async () => {
     try {
-      await sendTestPush();
-      toast.success(t('alerts.testSent'));
+      const r = await sendTestPush();
+      if (r.devices === 0) toast.error(t('alerts.noDevice'));
+      else if (r.sent === 0) toast.error(t('alerts.testFailed'));
+      else toast.success(t('alerts.testSent'));
     } catch {
       toast.error(t('alerts.saveFailed'));
     }
@@ -112,6 +117,7 @@ export default function AlertsPanel({ open, onOpenChange }: { open: boolean; onO
           </div>
           {iosHint && <p className="text-xs text-amber-700 bg-amber-50 rounded p-2">{t('alerts.iosHint')}</p>}
           {!supported && !iosHint && <p className="text-xs text-gray-500">{t('alerts.unsupported')}</p>}
+          {pushOn && <p className="text-xs text-green-700">✔ {t('alerts.deviceRegistered')}</p>}
           {pushOn && (
             <Button size="sm" variant="outline" onClick={test}>
               {t('alerts.test')}

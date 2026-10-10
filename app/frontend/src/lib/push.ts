@@ -34,8 +34,8 @@ export async function getPushSubscription(): Promise<PushSubscription | null> {
  *  the account + company that is logged in now, so pushes follow the current user (otherwise the
  *  switch shows "on" while the server still sends this device's pushes to the previous account). */
 let claimedThisLoad = false;
-export async function claimPushForCurrentUser(): Promise<boolean> {
-  if (claimedThisLoad || !isPushSupported() || Notification.permission !== 'granted') return false;
+export async function claimPushForCurrentUser(force = false): Promise<boolean> {
+  if ((claimedThisLoad && !force) || !isPushSupported() || Notification.permission !== 'granted') return false;
   const sub = await getPushSubscription();
   if (!sub) return false;
   const json = sub.toJSON();
@@ -76,9 +76,10 @@ export async function disablePush(): Promise<void> {
   await sub.unsubscribe();
 }
 
-export async function sendTestPush(): Promise<number> {
+export async function sendTestPush(): Promise<{ sent: number; devices: number }> {
   const res: any = await client.apiCall.invoke({ url: '/api/v1/notifications/push/test', method: 'POST' });
-  return (res?.data ?? res)?.sent ?? 0;
+  const d = res?.data ?? res;
+  return { sent: d?.sent ?? 0, devices: d?.devices ?? 0 };
 }
 
 /** Desktop notification from the open board (same tag as the server push, so never shown twice). */
