@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
+from services.tms_handoff import create_handoff
 from services.marketplace import MarketplaceService
 from dependencies.auth import get_current_user, require_approved_company
 from schemas.auth import UserResponse
@@ -199,6 +200,8 @@ async def accept_offer(
         )
         if not shipment:
             raise HTTPException(status_code=400, detail="Failed to accept offer")
+        # Supabase mode: put it in the forwarder's TMS Agency inbox ("📥 Novo sa Marketplace-a")
+        await create_handoff(db, shipment)
         return shipment
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
