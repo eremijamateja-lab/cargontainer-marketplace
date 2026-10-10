@@ -33,7 +33,25 @@ async def _company_of(db: AsyncSession, user_id: str) -> Optional[Companies]:
     return row.scalars().first()
 
 
-def build_payload(req: Transport_requests, offer: Offers, shipment: Shipments, carrier: Optional[Companies]) -> dict:
+def _company_block(co: Optional[Companies], fallback_name: Optional[str] = None) -> dict:
+    return {
+        "name": (co.company_name if co else None) or fallback_name,
+        "vat_number": co.vat_number if co else None,
+        "email": co.email if co else None,
+        "phone": co.phone if co else None,
+        "address": co.address if co else None,
+        "city": co.city if co else None,
+        "country": co.country if co else None,
+    }
+
+
+def build_payload(
+    req: Transport_requests,
+    offer: Offers,
+    shipment: Shipments,
+    carrier: Optional[Companies],
+    forwarder: Optional[Companies] = None,
+) -> dict:
     return {
         "source": "marketplace",
         "request": {
@@ -60,15 +78,9 @@ def build_payload(req: Transport_requests, offer: Offers, shipment: Shipments, c
             "estimated_days": offer.estimated_days,
             "notes": offer.notes,
         },
-        "carrier": {
-            "name": (carrier.company_name if carrier else None) or offer.carrier_name,
-            "vat_number": carrier.vat_number if carrier else None,
-            "email": carrier.email if carrier else None,
-            "phone": carrier.phone if carrier else None,
-            "address": carrier.address if carrier else None,
-            "city": carrier.city if carrier else None,
-            "country": carrier.country if carrier else None,
-        },
+        "carrier": _company_block(carrier, offer.carrier_name),
+        # the forwarder = the carrier's client on the TMS Carrier side
+        "forwarder": _company_block(forwarder, req.user_company),
         "marketplace_shipment": {"id": shipment.id, "tracking_number": shipment.tracking_number},
     }
 
@@ -85,7 +97,7 @@ async def create_handoff(db: AsyncSession, shipment: Shipments) -> None:
         if not forwarder or not forwarder.shared_company_id:
             return
         carrier = await _company_of(db, offer.user_id)
-        payload = build_payload(req, offer, shipment, carrier)
+        payload = build_payload(req, offer, shipment, carrier, forwarder)
         await db.execute(
             text(
                 """
