@@ -838,3 +838,17 @@ export function useSaveCorridors() {
     },
   });
 }
+
+// ─── Companies this person can act for (Supabase mode company switcher) ───
+export function useMyCompanies(enabled: boolean) {
+  return useQuery({
+    queryKey: ['my-companies'],
+    queryFn: async () => {
+      const res: any = await client.apiCall.invoke({ url: '/api/v1/profile/companies', method: 'GET' });
+      const data = res?.data ?? res;
+      return Array.isArray(data) ? data : [];
+    },
+    enabled,
+    staleTime: 5 * 60_000,
+  });
+}

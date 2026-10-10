@@ -86,8 +86,36 @@ async def verify_supabase_token(token: str) -> dict:
 
 
 def invalidate_user(user_id: str) -> None:
-    """Force the next request of this user to re-sync (e.g. right after onboarding)."""
-    _sync_cache.pop(user_id, None)
+    """Force the next request of this user to re-sync (e.g. right after onboarding).
+    Accepts an auth uid or an actor id; clears every company context of that person."""
+    uid = split_actor(user_id)[0]
+    for key in [k for k in _sync_cache if k.split("|", 1)[0] == uid]:
+        _sync_cache.pop(key, None)
+
+
+# ─── Actor = a person acting for one company ───
+# Marketplace rows (requests, offers, shipments, messages, profiles) are owned by an actor id
+# "<auth uid>:<shared company uuid>", so a person in two companies has two separate identities
+# and never sees or acts on one company's data while working for the other. Platform admins
+# without a company keep the bare auth uid.
+def make_actor(uid: str, company_uuid: Optional[str]) -> str:
+    return f"{uid}:{company_uuid}" if company_uuid else uid
+
+
+def split_actor(actor: str) -> tuple[str, Optional[str]]:
+    uid, _, company = (actor or "").partition(":")
+    return uid, (company or None)
+
+
+def pick_membership(memberships: list[dict], requested: Optional[str]) -> Optional[dict]:
+    """The company the user works for in this request: the one chosen in the Marketplace company
+    switcher (X-Company-Id) if the user really is an active member, else the default (memberships
+    are ordered: marketplace product first, then by join date - stable, never flips by itself)."""
+    if requested:
+        for m in memberships:
+            if m["company_id"] == requested:
+                return m
+    return memberships[0] if memberships else None
 
 
 def approval_from_shared(products: list, plan: Optional[str]) -> str:
@@ -166,16 +194,17 @@ async def _upsert_company(db: AsyncSession, m: dict) -> Companies:
     return company
 
 
-async def sync_user(db: AsyncSession, sb_user: dict) -> dict:
-    """Mirror the shared identity into marketplace tables.
+async def sync_user(db: AsyncSession, sb_user: dict, requested_company: Optional[str] = None) -> dict:
+    """Mirror the shared identity into marketplace tables, for the company the user acts for.
 
-    Returns {"admin": bool, "name": display name}. The name is what other companies see on
-    messages, so it never falls back to the e-mail address: profile name (set in TMS) →
-    auth metadata name → company name.
+    Returns {"admin": bool, "name": display name, "actor_id": str, "company_shared_id": uuid|None}.
+    The name is what other companies see on messages, so it never falls back to the e-mail
+    address: profile name (set in TMS) → auth metadata name → company name.
     """
-    user_id = sb_user["id"]
+    auth_uid = sb_user["id"]
     now_ts = time.time()
-    cached = _sync_cache.get(user_id)
+    cache_key = f"{auth_uid}|{requested_company or ''}"
+    cached = _sync_cache.get(cache_key)
     if cached and cached[0] > now_ts:
         return cached[1]
 
@@ -184,9 +213,12 @@ async def sync_user(db: AsyncSession, sb_user: dict) -> dict:
     name = meta.get("name") or meta.get("full_name")
 
     try:
-        admin = await is_platform_admin(db, user_id)
+        admin = await is_platform_admin(db, auth_uid)
+        memberships = await load_memberships(db, auth_uid)
+        active = pick_membership(memberships, requested_company)
+        user_id = make_actor(auth_uid, active["company_id"] if active else None)
         row = await db.execute(
-            text("select name from public.profiles where id = cast(:uid as uuid)"), {"uid": user_id}
+            text("select name from public.profiles where id = cast(:uid as uuid)"), {"uid": auth_uid}
         )
         profile_name = row.scalar_one_or_none()
         if profile_name and profile_name.strip():
@@ -201,14 +233,13 @@ async def sync_user(db: AsyncSession, sb_user: dict) -> dict:
         else:
             user_row.email, user_row.role, user_row.name = email, role, name
 
-        memberships = await load_memberships(db, user_id)
         if not name:
-            name = memberships[0]["name"] if memberships else "Cargontainer"
+            name = active["name"] if active else "Cargontainer"
         res = await db.execute(select(User_profiles).where(User_profiles.user_id == user_id))
         profile = res.scalar_one_or_none()
 
-        if memberships:
-            m = memberships[0]
+        if active:
+            m = active
             company = await _upsert_company(db, m)
             member_role = MEMBER_ROLE_MAP.get(m["member_role"], "operations")
             if profile is None:
@@ -259,9 +290,14 @@ async def sync_user(db: AsyncSession, sb_user: dict) -> dict:
         await db.commit()
     except Exception:
         await db.rollback()
-        logger.exception("Supabase sync failed for user %s", user_id[:8])
+        logger.exception("Supabase sync failed for user %s", auth_uid[:8])
         raise HTTPException(status_code=503, detail="Could not load company data")
 
-    result = {"admin": admin, "name": name}
-    _sync_cache[user_id] = (now_ts + SYNC_TTL, result)
+    result = {
+        "admin": admin,
+        "name": name,
+        "actor_id": user_id,
+        "company_shared_id": active["company_id"] if active else None,
+    }
+    _sync_cache[cache_key] = (now_ts + SYNC_TTL, result)
     return result

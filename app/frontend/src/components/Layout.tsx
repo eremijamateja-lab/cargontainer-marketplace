@@ -9,8 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LayoutDashboard, Plus, Truck, LogOut, Menu, X, Globe, User, ShoppingCart, Send, Eye, Building2, Search, Shield, MessageCircle } from 'lucide-react';
-import { useUnreadMessageCount, useAdminPendingCount } from '@/hooks/useAppQueries';
+import { LayoutDashboard, Plus, Truck, LogOut, Menu, X, Globe, User, ShoppingCart, Send, Eye, Building2, Search, Shield, MessageCircle, Check } from 'lucide-react';
+import { useUnreadMessageCount, useAdminPendingCount, useMyCompanies } from '@/hooks/useAppQueries';
+import { switchActiveCompany } from '@/lib/api';
 import { supabaseSignOut } from '@/lib/supabase';
 
 interface LayoutProps {
@@ -31,6 +32,8 @@ export default function Layout({ children, user, profile, isAdmin, onLogout }: L
   const role = profile?.role || 'forwarder';
   const { data: unreadCount = 0 } = useUnreadMessageCount(!!profile);
   const { data: adminPendingCount = 0 } = useAdminPendingCount(!!isAdmin);
+  // Supabase mode: companies this person can act for; the switcher shows only when there are 2+
+  const { data: myCompanies = [] } = useMyCompanies(!!user);
 
   const getNavItems = () => {
     const items = [
@@ -183,7 +186,24 @@ export default function Layout({ children, user, profile, isAdmin, onLogout }: L
                     </div>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-60">
+                  {myCompanies.length > 1 && (
+                    <>
+                      <div className="px-2 py-1.5 text-[11px] font-medium text-gray-400 uppercase">{t('nav.actingFor')}</div>
+                      {myCompanies.map((c: any) => (
+                        <DropdownMenuItem
+                          key={c.id}
+                          onClick={() => { if (!c.active) switchActiveCompany(c.id); }}
+                          className="cursor-pointer"
+                        >
+                          <Building2 className="w-4 h-4 mr-2 text-gray-400" />
+                          <span className="flex-1 truncate">{c.name}</span>
+                          {c.active && <Check className="w-4 h-4 ml-2 text-blue-600" />}
+                        </DropdownMenuItem>
+                      ))}
+                      <div className="my-1 border-t border-gray-100" />
+                    </>
+                  )}
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
                     <LogOut className="w-4 h-4 mr-2" />
                     {t('nav.logout')}

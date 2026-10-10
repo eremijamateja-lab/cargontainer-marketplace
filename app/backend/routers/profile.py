@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
 from core.database import get_db
-from services.supabase_bridge import MEMBER_ROLE_MAP, invalidate_user, load_memberships
+from services.supabase_bridge import MEMBER_ROLE_MAP, invalidate_user, load_memberships, pick_membership
 from services.user_profiles import User_profilesService
 from dependencies.auth import get_current_user
 from schemas.auth import UserResponse
@@ -120,12 +120,13 @@ async def create_or_update_profile(
             # The company already exists in the shared register (created via TMS Agency
             # self-signup / Platform admin) and was mirrored by get_current_user's sync.
             # Onboarding here only picks the marketplace role.
-            memberships = await load_memberships(db, str(current_user.id))
+            memberships = await load_memberships(db, current_user.auth_id or str(current_user.id))
+            active = pick_membership(memberships, current_user.company_shared_id)
             company = None
-            if memberships:
+            if active:
                 company = (
                     await db.execute(
-                        select(Companies).where(Companies.shared_company_id == memberships[0]["company_id"])
+                        select(Companies).where(Companies.shared_company_id == active["company_id"])
                     )
                 ).scalar_one_or_none()
             if not company:
@@ -144,7 +145,7 @@ async def create_or_update_profile(
                 display_name=data.display_name or current_user.name or company.company_name,
                 created_at=datetime.now(),
                 company_id=company.id,
-                member_role=MEMBER_ROLE_MAP.get(memberships[0]["member_role"], "operations"),
+                member_role=MEMBER_ROLE_MAP.get(active["member_role"], "operations"),
                 member_status="active",
             )
             db.add(new_profile)

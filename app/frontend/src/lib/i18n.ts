@@ -11,6 +11,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.allRequests': 'All Requests',
     'nav.marketplace': 'Marketplace',
     'nav.logout': 'Logout',
+    'nav.actingFor': 'Working for',
     'nav.login': 'Login',
 
     // Onboarding
@@ -635,6 +636,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.allRequests': 'Svi zahtevi',
     'nav.marketplace': 'Tržište',
     'nav.logout': 'Odjava',
+    'nav.actingFor': 'Radim u ime firme',
     'nav.login': 'Prijava',
 
     // Onboarding

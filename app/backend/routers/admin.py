@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import settings
 from core.database import get_db
 from dependencies.auth import SHARED_COMPANY_FIELDS, get_current_user, is_platform_admin, require_local_mode
-from services.supabase_bridge import load_memberships
+from services.supabase_bridge import load_memberships, pick_membership
 from models.companies import Companies
 from models.user_profiles import User_profiles
 from schemas.auth import UserResponse
@@ -83,11 +83,12 @@ async def get_approval_status(
         if settings.is_supabase:
             # Tell /onboarding whether a shared company already exists (then only the marketplace
             # role is asked) or the user still has to register their company via TMS Agency.
-            memberships = await load_memberships(db, str(current_user.id))
-            if memberships:
+            memberships = await load_memberships(db, current_user.auth_id or str(current_user.id))
+            active = pick_membership(memberships, current_user.company_shared_id)
+            if active:
                 return {
                     "status": "no_profile",
-                    "company_name": memberships[0]["name"],
+                    "company_name": active["name"],
                     "company_id": None,
                     "has_shared_company": True,
                 }

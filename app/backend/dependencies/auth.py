@@ -62,19 +62,23 @@ async def get_bearer_token(
 
 
 async def get_current_user(
-    token: str = Depends(get_bearer_token), db: AsyncSession = Depends(get_db)
+    request: Request, token: str = Depends(get_bearer_token), db: AsyncSession = Depends(get_db)
 ) -> UserResponse:
     """Dependency to get current authenticated user via JWT token."""
     if settings.is_supabase:
-        # Shared Supabase login (same account as TMS Agency / TMS Carrier)
+        # Shared Supabase login (same account as TMS Agency / TMS Carrier). The user acts for
+        # the company picked in the Marketplace company switcher (X-Company-Id header).
         sb_user = await verify_supabase_token(token)
-        synced = await sync_user(db, sb_user)
+        requested = (request.headers.get("x-company-id") or "").strip()[:64] or None
+        synced = await sync_user(db, sb_user, requested)
         return UserResponse(
-            id=sb_user["id"],
+            id=synced["actor_id"],
             email=sb_user.get("email") or "",
             name=synced["name"],
             role="admin" if synced["admin"] else "user",
             last_login=None,
+            auth_id=sb_user["id"],
+            company_shared_id=synced["company_shared_id"],
         )
 
     try:
