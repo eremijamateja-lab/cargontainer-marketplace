@@ -404,3 +404,9 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
   Phone test before: push to Test Prevoznik (IT→RS by Nexalog) arrived after the device was
   re-registered — the old switch showed "on" for a device registered to Ecom (fixed: claim on load).
 - 2026-10-10: **Phase 2 confirmed live by the user**: accepted offer → Nexalog's Agency inbox (CRG-3A308C09) → pre-filled shipment created, row 'used' (its shipment_id is null now = that shipment was deleted afterwards, FK on delete set null).
+
+### 2026-10-12 — shipments fed from TMS Carrier (DB only, from the Carrier session)
+- A Marketplace shipment whose carrier made a TMS Carrier trip from the hand-off is now updated by a DB trigger
+  (`cargontainer-tms/supabase/migrations/20261012110000_marketplace_shipment_sync.sql`, applied): status (forward only,
+  milestone `updated_by: 'TMS Carrier'`), plates, driver, current_location and `transport_requests.tracking_link`
+  (TMS Carrier /pracenje page). No code change in this repo; the carrier can still advance status by hand.
