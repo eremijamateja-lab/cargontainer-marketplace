@@ -441,3 +441,16 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
   (compact) /dashboard. Supabase mode: Company page members are read-only with a note "add colleagues in Cargontainer TMS
   (Korisnici → Pozovi kolegu)" + link — the old add/role/remove controls only 409'd there. Tested locally (0/1/4 ratings,
   headless Chrome, zero console errors).
+- 2026-10-14: **Marketplace access per person** (user: "not everyone in TMS uses the Marketplace; some use only the
+  Marketplace"). Company stays shared; `public.company_members.marketplace_access` (Agency migration
+  20261014090000, applied after a rolled-back dry run with the user's OK) — existing members of marketplace
+  companies kept access, new TMS members don't get it; a marketplace company with nobody having access gives it
+  to its Admins (signup / product added). `public.marketplace_seat_log` (trigger) logs every change of effective
+  access = basis for per-user billing (rule not chosen yet; recommended: max concurrent users per month).
+  Adding colleagues: no platform-admin approval (user decision) — Edge Function `marketplace-invite` (Agency repo,
+  deployed by pasting in Studio) creates the account (temp password shown once) or adds an existing one.
+  Backend: load_memberships has marketplace_access (access first), no access → profile.member_status 'no_access'
+  → require_approved_company 403, approval-status 'no_access' → /pending-approval "Nemate pristup".
+  Frontend: `components/TeamPanel.tsx` replaces the members section on /company in Supabase mode (supabase-js +
+  RLS: company Admin toggles access; roles/remove only for marketplace-only companies, TMS roles stay in TMS);
+  'driver' role removed. Agency Platform admin → firma → Članovi: Marketplace column + user count.

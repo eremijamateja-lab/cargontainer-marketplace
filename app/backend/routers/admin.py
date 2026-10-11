@@ -118,6 +118,8 @@ async def get_approval_status(
 
     # Return company approval status
     status = company.approval_status or "approved"  # Existing companies without status are approved
+    if settings.is_supabase and status == "approved" and profile.member_status == "no_access":
+        status = "no_access"  # company is on the Marketplace, this person has no access
     return {
         "status": status,
         "company_name": company.company_name,

@@ -17,7 +17,8 @@ import {
 } from '@/lib/constants';
 import Layout from '@/components/Layout';
 import { MyReputation } from '@/components/TrustBadges';
-import { AGENCY_SIGNUP_URL, isSupabaseMode } from '@/lib/supabase';
+import TeamPanel from '@/components/TeamPanel';
+import { isSupabaseMode } from '@/lib/supabase';
 import Flag from '@/components/Flag';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -215,7 +216,6 @@ export default function Company() {
     { value: 'admin', label: 'Admin', color: 'bg-blue-100 text-blue-700' },
     { value: 'operations', label: 'Operations', color: 'bg-green-100 text-green-700' },
     { value: 'sales', label: 'Sales', color: 'bg-purple-100 text-purple-700' },
-    { value: 'driver', label: 'Driver', color: 'bg-orange-100 text-orange-700' },
   ];
 
   const getRoleColor = (role: string) => {
@@ -242,7 +242,12 @@ export default function Company() {
     );
   };
 
-  const renderMembersSection = () => (
+  // Supabase mode: the shared company's people and who of them has Marketplace access
+  const sharedCompanyId: string | null = user?.data?.company_shared_id || null;
+  const renderMembersSection = () => (isSupabaseMode
+    ? (sharedCompanyId ? <TeamPanel companyId={sharedCompanyId} myAuthId={user?.data?.auth_id} /> : null)
+    : renderLocalMembersSection());
+  const renderLocalMembersSection = () => (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -266,12 +271,6 @@ export default function Company() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isSupabaseMode && (
-          <p className="text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded px-3 py-2">
-            {t('company.membersInTms')}{' '}
-            <a href={AGENCY_SIGNUP_URL} target="_blank" rel="noreferrer" className="font-medium underline">{t('company.openTms')}</a>
-          </p>
-        )}
         {/* Add Member Form */}
         {showInviteForm && canManageMembers && (
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">

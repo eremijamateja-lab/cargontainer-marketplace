@@ -134,11 +134,11 @@ async def is_platform_admin(db: AsyncSession, user_id: str) -> bool:
 
 
 async def load_memberships(db: AsyncSession, user_id: str) -> list[dict]:
-    """Active shared memberships, the ones with the marketplace product first."""
+    """Active shared memberships: marketplace product + personal Marketplace access first."""
     result = await db.execute(
         text(
             """
-            select cm.role as member_role, cm.joined_at,
+            select cm.role as member_role, cm.joined_at, cm.marketplace_access,
                    c.id::text as company_id, c.name, c.country, c.city, c.vat, c.email, c.phone,
                    c.website, c.address, c.logo_url, c.plan,
                    coalesce(array_agg(cp.product) filter (where cp.product is not null), '{}') as products
@@ -146,8 +146,9 @@ async def load_memberships(db: AsyncSession, user_id: str) -> list[dict]:
             join public.companies c on c.id = cm.company_id
             left join public.company_products cp on cp.company_id = c.id
             where cm.user_id = cast(:uid as uuid) and cm.active
-            group by cm.role, cm.joined_at, c.id
-            order by bool_or(cp.product = 'marketplace') desc nulls last, cm.joined_at
+            group by cm.role, cm.joined_at, cm.marketplace_access, c.id
+            order by (coalesce(bool_or(cp.product = 'marketplace'), false) and cm.marketplace_access) desc,
+                     bool_or(cp.product = 'marketplace') desc nulls last, cm.joined_at
             """
         ),
         {"uid": user_id},
@@ -242,6 +243,8 @@ async def sync_user(db: AsyncSession, sb_user: dict, requested_company: Optional
             m = active
             company = await _upsert_company(db, m)
             member_role = MEMBER_ROLE_MAP.get(m["member_role"], "operations")
+            # Access is per person (company_members.marketplace_access, switched by the company Admin)
+            member_status = "active" if m.get("marketplace_access") else "no_access"
             if profile is None:
                 # A teammate already picked the company's marketplace role — inherit it, so only the
                 # first person of a company sees the role picker on /onboarding.
@@ -255,14 +258,14 @@ async def sync_user(db: AsyncSession, sb_user: dict, requested_company: Optional
                             created_at=datetime.now(timezone.utc),
                             company_id=company.id,
                             member_role=member_role,
-                            member_status="active",
+                            member_status=member_status,
                         )
                     )
             else:
                 profile.company_id = company.id
                 profile.company_name = company.company_name
                 profile.member_role = member_role
-                profile.member_status = "active"
+                profile.member_status = member_status
         elif admin and profile is None:
             # Platform admins have no company membership by design (TMS Carrier notes: adding one
             # would switch their Agency view). Give them a company-less profile so the app's

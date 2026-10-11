@@ -126,15 +126,22 @@ async def require_approved_company(
     from models.user_profiles import User_profiles
     from sqlalchemy import select
 
-    row = await db.execute(
-        select(Companies.approval_status)
-        .join(User_profiles, User_profiles.company_id == Companies.id)
-        .where(User_profiles.user_id == str(current_user.id))
-    )
-    if row.scalar_one_or_none() != "approved":
+    row = (
+        await db.execute(
+            select(Companies.approval_status, User_profiles.member_status)
+            .join(User_profiles, User_profiles.company_id == Companies.id)
+            .where(User_profiles.user_id == str(current_user.id))
+        )
+    ).first()
+    if not row or row[0] != "approved":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Your company is not approved for Cargontainer Marketplace yet.",
+        )
+    if row[1] == "no_access":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Nemate pristup Marketplace-u. Obratite se adminu svoje firme.",
         )
     return current_user
 

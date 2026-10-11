@@ -28,5 +28,5 @@ async def my_companies(current_user: UserResponse = Depends(get_current_user), d
             "active": m["company_id"] == current_user.company_shared_id,
         }
         for m in memberships
-        if "marketplace" in (m["products"] or [])
+        if "marketplace" in (m["products"] or []) and m.get("marketplace_access")
     ]

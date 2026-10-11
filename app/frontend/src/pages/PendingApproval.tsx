@@ -70,7 +70,8 @@ export default function PendingApproval() {
     );
   }
 
-  const isRejected = status === 'rejected';
+  const isRejected = status === 'rejected' || status === 'no_access';
+  const noAccess = status === 'no_access';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -81,10 +82,10 @@ export default function PendingApproval() {
               <XCircle className="w-8 h-8 text-red-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">
-              {t('approval.rejectedTitle')}
+              {noAccess ? t('approval.noAccessTitle') : t('approval.rejectedTitle')}
             </h1>
             <p className="text-gray-600 mb-6">
-              {t('approval.rejectedMessage')}
+              {noAccess ? t('approval.noAccessMessage') : t('approval.rejectedMessage')}
             </p>
             {companyName && (
               <p className="text-sm text-gray-500 mb-6">

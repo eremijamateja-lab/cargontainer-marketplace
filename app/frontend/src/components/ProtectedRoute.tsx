@@ -27,7 +27,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
         if (approvalRes?.data) {
           const s = approvalRes.data.status;
-          if (s === 'pending' || s === 'rejected') {
+          if (s === 'pending' || s === 'rejected' || s === 'no_access') {
             navigate('/pending-approval');
             return;
           }
