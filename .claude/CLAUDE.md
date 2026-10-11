@@ -410,3 +410,28 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
   (`cargontainer-tms/supabase/migrations/20261012110000_marketplace_shipment_sync.sql`, applied): status (forward only,
   milestone `updated_by: 'TMS Carrier'`), plates, driver, current_location and `transport_requests.tracking_link`
   (TMS Carrier /pracenje page). No code change in this repo; the carrier can still advance status by hand.
+
+### 2026-10-11 — Phase 3 "poverenje" (`83d12c9`; Agency `48534c2`) + Carrier hand-off (`a01fb18`)
+- Carrier hand-off: payload now has a `forwarder` block (the carrier's client in TMS Carrier);
+  Carrier side lives in marketplace_handoffs.carrier_* (Agency migration 20261011100000) and
+  TMS Carrier "Nalozi partnera → 🛒 Sa Marketplace-a → Napravi turu". Confirmed live by the user.
+- Decisions (user): ratings shown only as an average + anonymous comments, from 3 ratings;
+  unverified companies work normally, only without the badge; verification = manual by the
+  Platform admin (TMS Agency → Klijenti platforme → firma → Upravljanje → Verifikuj firmu).
+- `marketplace.ratings` (migration 20261011120000_marketplace_ratings.sql): one per company per
+  delivered shipment (unique shipment_id+rater_company), rater_role forwarder (s1 punctuality,
+  s2 communication, s3 cargo condition) / carrier (s1 payment, s2 communication, s3 order
+  accuracy), overall = mean, comment. `public.companies.verified_at/verified_by_name` (Agency
+  migration 20261011120000), guarded by protect_company_admin_fields. Both applied to live with
+  the user's OK after a rolled-back dry run (company admin can't self-verify; duplicate and
+  out-of-range ratings refused).
+- `/api/v1/trust`: POST lookup {company_ids: shared uuids} → verified, member_since, rating (null
+  under 3), rating_count, completed (delivered as forwarder or carrier); GET
+  companies/{id}/reviews (anonymous, from 3); GET ratings/shipment/{id}; POST ratings.
+  Company of a row = part after ':' of its actor id (local mode: the actor id itself, no
+  verification). Frontend: `components/TrustBadges.tsx` (Marketplace request cards = forwarder,
+  Offers cards = carrier; click ⭐ → reviews), `components/RateDialog.tsx` (RateButton on
+  delivered shipment cards).
+- Local test (copy of local.db): rate before delivery 400, both sides rate once, third company
+  403, duplicate 400, score 9 → 422; lookup count 1 / completed 1; headless Chrome: /shipments
+  shows "Rated", /offers + /marketplace render, zero console errors.
