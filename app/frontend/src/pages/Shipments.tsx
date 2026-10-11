@@ -11,6 +11,7 @@ import {
   useUpdateDriverDetails,
 } from '@/hooks/useAppQueries';
 import Layout from '@/components/Layout';
+import { RateButton } from '@/components/RateDialog';
 import { ShipmentCardSkeleton } from '@/components/Skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -488,6 +489,7 @@ export default function Shipments() {
                 >
                   {getStepLabel(shipment.status)}
                 </Badge>
+                {delivered && <RateButton shipment={shipment} />}
               </div>
               <div className="flex flex-wrap items-center gap-0.5 sm:gap-1.5 text-[11px] sm:text-sm text-gray-600 min-w-0 overflow-hidden mt-0.5">
                 {shipment.origin_country && (

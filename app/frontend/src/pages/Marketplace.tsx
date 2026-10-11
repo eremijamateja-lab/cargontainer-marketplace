@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useMarketplaceRequests, useSubmitOffer, useMyCompany, useCorridors } from '@/hooks/useAppQueries';
 import AlertsPanel from '@/components/AlertsPanel';
+import TrustBadges, { companyOf, useTrust } from '@/components/TrustBadges';
 import { requestMatchesAny, type Corridor } from '@/lib/corridors';
 import { claimPushForCurrentUser, isSoundOn, playAlertSound, showLocalNotification } from '@/lib/push';
 import { hasCompanyRole, isOnlyForwarder, parseCompanyRoles } from '@/lib/formatCompanyRoles';
@@ -155,6 +156,9 @@ export default function Marketplace() {
     const el = document.getElementById(`request-${focusId}`);
     el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [focusId, dataLoading]);
+
+  // Trust badges (verified / rating / completed) for every forwarder on the board
+  const { data: trust = {} } = useTrust((visibleRequests as any[]).map((r) => r.user_id));
 
   // Filtered requests
   const filteredRequests = useMemo(() => {
@@ -506,6 +510,7 @@ export default function Marketplace() {
                               <span className="text-gray-600">{t('common.by')}</span> {req.user_company}
                             </span>
                           )}
+                          <TrustBadges actor={req.user_id} info={trust[companyOf(req.user_id) || '']} name={req.user_company} />
                           {req.preferred_date && (
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />

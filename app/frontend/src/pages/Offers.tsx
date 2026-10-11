@@ -15,6 +15,7 @@ import {
 import { hasCompanyRole, isOnlyForwarder } from '@/lib/formatCompanyRoles';
 import Layout from '@/components/Layout';
 import ChatPanel from '@/components/ChatPanel';
+import TrustBadges, { companyOf, useTrust } from '@/components/TrustBadges';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -96,6 +97,11 @@ export default function Offers() {
     isLoading: carrierOffersLoading,
     isFetching: carrierOffersFetching,
   } = useMyOffers(!!profile && (isProvider || isAdmin) && !showForwarderView && activeTab === 'submitted');
+
+  // Trust badges for every carrier whose offer is on this page
+  const { data: trust = {} } = useTrust(
+    [...(forwarderOffers as any[]), ...(allReceivedOffers as any[]), ...(carrierOffers as any[])].map((o) => o.user_id)
+  );
 
   const acceptMutation = useAcceptOffer();
   const rejectMutation = useRejectOffer();
@@ -207,6 +213,7 @@ export default function Offers() {
                   <span className="text-sm font-semibold text-gray-900">
                     {offer.carrier_name || (isCustomsOffer ? t('common.anonymousAgent') : t('common.anonymousCarrier'))}
                   </span>
+                  <TrustBadges actor={offer.user_id} info={trust[companyOf(offer.user_id) || '']} name={offer.carrier_name} />
                 </div>
                 <Badge
                   variant="outline"
@@ -340,6 +347,7 @@ export default function Offers() {
                   <span className="text-sm font-semibold text-gray-900">
                     {offer.carrier_name || (isCustomsOffer ? t('common.anonymousAgent') : t('common.anonymousCarrier'))}
                   </span>
+                  <TrustBadges actor={offer.user_id} info={trust[companyOf(offer.user_id) || '']} name={offer.carrier_name} />
                 </div>
                 <Badge
                   variant="outline"
