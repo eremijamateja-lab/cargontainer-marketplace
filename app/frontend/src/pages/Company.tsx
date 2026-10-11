@@ -16,6 +16,8 @@ import {
   CAPABILITY_TRANSPORT_CATEGORIES,
 } from '@/lib/constants';
 import Layout from '@/components/Layout';
+import { MyReputation } from '@/components/TrustBadges';
+import { AGENCY_SIGNUP_URL, isSupabaseMode } from '@/lib/supabase';
 import Flag from '@/components/Flag';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -196,6 +198,8 @@ export default function Company() {
   // User is company admin if: they have no company yet (creating), OR their member_role is 'admin',
   // OR they are the company creator (fallback for old records before member_role was added)
   const isCompanyAdmin = !hasCompany || profile?.member_role === 'admin' || (!profile?.member_role && !!profile?.company_id);
+  // Supabase mode: the team is the shared company's team, managed in Cargontainer TMS
+  const canManageMembers = isCompanyAdmin && !isSupabaseMode;
   const showForm = editing || !hasCompany;
 
   // Verified legal fields are locked for normal approved users (non-platform-admin) —
@@ -248,7 +252,7 @@ export default function Company() {
               <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{members.length}</span>
             )}
           </CardTitle>
-          {isCompanyAdmin && (
+          {canManageMembers && (
             <Button
               variant="outline"
               size="sm"
@@ -262,8 +266,14 @@ export default function Company() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {isSupabaseMode && (
+          <p className="text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded px-3 py-2">
+            {t('company.membersInTms')}{' '}
+            <a href={AGENCY_SIGNUP_URL} target="_blank" rel="noreferrer" className="font-medium underline">{t('company.openTms')}</a>
+          </p>
+        )}
         {/* Add Member Form */}
-        {showInviteForm && isCompanyAdmin && (
+        {showInviteForm && canManageMembers && (
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
             <h4 className="text-sm font-medium text-gray-800">{t('company.addMember')}</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -368,7 +378,7 @@ export default function Company() {
                 </div>
                 {/* Role Badge */}
                 <div className="sm:col-span-2 pl-10 sm:pl-0">
-                  {isCompanyAdmin && m.member_role !== 'admin' ? (
+                  {canManageMembers && m.member_role !== 'admin' ? (
                     <select
                       value={m.member_role || 'member'}
                       onChange={(e) => {
@@ -403,7 +413,7 @@ export default function Company() {
                 </div>
                 {/* Actions */}
                 <div className="sm:col-span-1 pl-10 sm:pl-0 flex justify-end">
-                  {isCompanyAdmin && m.member_role !== 'admin' && (
+                  {canManageMembers && m.member_role !== 'admin' && (
                     <Button
                       size="sm"
                       variant="ghost"
@@ -433,7 +443,7 @@ export default function Company() {
           <div className="text-center py-8 text-gray-500">
             <Users className="w-8 h-8 mx-auto mb-2 text-gray-300" />
             <p className="text-sm">{t('company.noMembers')}</p>
-            {isCompanyAdmin && (
+            {canManageMembers && (
               <p className="text-xs mt-1 text-gray-400">Click &quot;{t('company.addMember')}&quot; to add your first team member</p>
             )}
           </div>
@@ -923,6 +933,8 @@ export default function Company() {
                 </CardContent>
               </Card>
             )}
+
+            <MyReputation />
 
             {/* Members — always visible in view mode */}
             {renderMembersSection()}

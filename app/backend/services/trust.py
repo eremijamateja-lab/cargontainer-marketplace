@@ -157,3 +157,31 @@ async def rate(db: AsyncSession, shipment: Shipments, actor: str, s1: int, s2: i
     await db.commit()
     await db.refresh(rating)
     return rating
+
+
+async def my_reputation(db: AsyncSession, actor: str) -> dict:
+    """The logged-in company's own trust info: badges, per-criteria averages and reviews (from 3)."""
+    company = company_of(actor)
+    if not company:
+        return {"company_id": None}
+    info = (await lookup(db, [company]))[company]
+    groups = {}
+    rows = await db.execute(
+        select(Ratings.rater_role, func.count(Ratings.id), func.avg(Ratings.s1), func.avg(Ratings.s2), func.avg(Ratings.s3))
+        .where(Ratings.rated_company == company)
+        .group_by(Ratings.rater_role)
+    )
+    for role, n, a1, a2, a3 in rows.all():
+        # rater_role 'forwarder' = rated by a forwarder = this company acted as carrier
+        groups[role] = {
+            "count": int(n),
+            "s": [round(float(a), 1) for a in (a1, a2, a3)] if n >= MIN_RATINGS_SHOWN else None,
+        }
+    return {
+        "company_id": company,
+        **info,
+        "min_shown": MIN_RATINGS_SHOWN,
+        "by_forwarders": groups.get("forwarder"),
+        "by_carriers": groups.get("carrier"),
+        "reviews": await reviews(db, company),
+    }

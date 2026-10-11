@@ -436,3 +436,8 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
   403, duplicate 400, score 9 → 422; lookup count 1 / completed 1; headless Chrome: /shipments
   shows "Rated", /offers + /marketplace render, zero console errors.
 - 2026-10-11: Phase 3 deployed (Render + Loopia bundle index-BFoYWnbO.js, Agency index-Im3jDZf3.js); awaiting the user's live test.
+- 2026-10-11: "Vaša reputacija" (user asked: a rated carrier saw his rating nowhere). `GET /api/v1/trust/me` (badges +
+  per-criteria averages split by rater role, each only from 3 ratings, + reviews) → `MyReputation` card on /company and
+  (compact) /dashboard. Supabase mode: Company page members are read-only with a note "add colleagues in Cargontainer TMS
+  (Korisnici → Pozovi kolegu)" + link — the old add/role/remove controls only 409'd there. Tested locally (0/1/4 ratings,
+  headless Chrome, zero console errors).

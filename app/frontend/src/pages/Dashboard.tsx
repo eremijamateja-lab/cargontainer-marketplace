@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useReceivedOffers } from '@/hooks/useAppQueries';
 import Layout from '@/components/Layout';
+import { MyReputation } from '@/components/TrustBadges';
 import Flag from '@/components/Flag';
 import { Button } from '@/components/ui/button';
 import { StatCardSkeleton, CardSkeleton } from '@/components/Skeleton';
@@ -284,6 +285,8 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+
+        <MyReputation compact />
 
         {/* Recent Activity */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-[0_1px_2px_rgba(20,24,31,0.04),0_10px_24px_-16px_rgba(20,24,31,0.18)] overflow-hidden">

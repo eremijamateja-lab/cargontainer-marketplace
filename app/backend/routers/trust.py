@@ -34,6 +34,12 @@ async def lookup(data: LookupIn, db: AsyncSession = Depends(get_db)):
     return await trust.lookup(db, [c[:64] for c in data.company_ids])
 
 
+@router.get("/me")
+async def my_reputation(current_user: UserResponse = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """The current company's own badges, ratings and reviews (averages from 3 ratings)."""
+    return await trust.my_reputation(db, str(current_user.id))
+
+
 @router.get("/companies/{company_id}/reviews")
 async def company_reviews(company_id: str, db: AsyncSession = Depends(get_db)):
     """Anonymous reviews of a company — only once it has at least 3."""
