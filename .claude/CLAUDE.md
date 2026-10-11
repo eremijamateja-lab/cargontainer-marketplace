@@ -435,3 +435,4 @@ on top of the full in-platform flow + TMS hand-off via `shared_orders`.
 - Local test (copy of local.db): rate before delivery 400, both sides rate once, third company
   403, duplicate 400, score 9 → 422; lookup count 1 / completed 1; headless Chrome: /shipments
   shows "Rated", /offers + /marketplace render, zero console errors.
+- 2026-10-11: Phase 3 deployed (Render + Loopia bundle index-BFoYWnbO.js, Agency index-Im3jDZf3.js); awaiting the user's live test.
